@@ -3,6 +3,9 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '3.1.1'
 
+gem 'pry'
+gem 'rainbow'
+
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails', branch: 'main'
 gem 'rails', '~> 6.0.4', '>= 6.0.4.7'
 # Use Puma as the app server
@@ -34,3 +37,4 @@ gem 'sidekiq'
 source "https://gems.contribsys.com/" do
   gem 'sidekiq-pro'
 end
+gem "attr_extras", "~> 6.2"
