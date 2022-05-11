@@ -1,0 +1,62 @@
+PATH
+  remote: .
+  specs:
+    sidekiq_workflows (0.1.0)
+      activesupport
+      sidekiq-pro
+
+GEM
+  remote: https://gems.contribsys.com/
+  specs:
+    sidekiq-pro (5.3.1)
+      sidekiq (>= 6.3.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (7.0.3)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (>= 1.6, < 2)
+      minitest (>= 5.1)
+      tzinfo (~> 2.0)
+    concurrent-ruby (1.1.10)
+    connection_pool (2.2.5)
+    diff-lcs (1.5.0)
+    i18n (1.10.0)
+      concurrent-ruby (~> 1.0)
+    minitest (5.15.0)
+    rack (2.2.3)
+    rake (13.0.6)
+    redis (4.6.0)
+    rspec (3.11.0)
+      rspec-core (~> 3.11.0)
+      rspec-expectations (~> 3.11.0)
+      rspec-mocks (~> 3.11.0)
+    rspec-core (3.11.0)
+      rspec-support (~> 3.11.0)
+    rspec-expectations (3.11.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.11.0)
+    rspec-mocks (3.11.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.11.0)
+    rspec-support (3.11.0)
+    sidekiq (6.4.2)
+      connection_pool (>= 2.2.2)
+      rack (~> 2.0)
+      redis (>= 4.2.0)
+    tzinfo (2.0.4)
+      concurrent-ruby (~> 1.0)
+
+PLATFORMS
+  arm64-darwin-21
+
+DEPENDENCIES
+  rake (~> 13.0)
+  rspec (~> 3.0)
+  sidekiq
+  sidekiq-pro!
+  sidekiq_workflows!
+
+BUNDLED WITH
+   2.3.11
