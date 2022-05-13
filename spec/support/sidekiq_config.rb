@@ -28,4 +28,7 @@ end
 Sidekiq.configure_server do |config|
   config.log_formatter = Sidekiq::Logger::Formatters::JSON.new
   config.options[:job_logger] = CustomJobLogger
+  config.on(:heartbeat) do
+    Sidekiq.logger.debug "first heartbeat or recovering from an outage and need to reestablish our heartbeat"
+  end
 end

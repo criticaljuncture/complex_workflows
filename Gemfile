@@ -10,6 +10,8 @@ gem "rake", "~> 13.0"
 gem "rspec", "~> 3.0"
 gem 'sidekiq'
 
+gem 'pry'
+
 source "https://gems.contribsys.com/" do
   gem 'sidekiq-pro'
 end

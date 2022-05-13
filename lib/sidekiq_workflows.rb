@@ -10,25 +10,13 @@ require_relative "sidekiq_workflows/step"
 require_relative "sidekiq_workflows/workflow"
 
 module SidekiqWorkflows
+  class Error < StandardError; end
+  class NoJobsEnqueued < Error; end
+
   extend ActiveSupport::Concern
-
-  @@descendants = []
-  def self.descendants
-    Dir["#{Rails.root}/app/**/*.rb"].each { |file| require_dependency file } if Rails.env.development?
-    @@descendants
-  end
-
-  def self.titles_with_negative_pending
-    descendants.map(&:titles_with_negative_pending).flatten.uniq
-  end
-
-  def self.titles_in_process
-    descendants.map(&:titles_in_process).flatten.uniq
-  end
 
   included do
     include Sidekiq::Worker
-    @@descendants << self
   end
 
   class_methods do
@@ -39,14 +27,16 @@ module SidekiqWorkflows
 
   def step_jobs
     @workflow_batch.jobs do
-      step_batch = Sidekiq::Batch.new
-      step_batch.description = @description
-      step_batch.callback_queue = :critical
-      step_batch.on(:success, "#{self.class}##{@next_step.identifier}", @args) if @next_step.present?
+      @step_batch = Sidekiq::Batch.new
+      @step_batch.description = @description
+      @step_batch.callback_queue = self.class.sidekiq_options["queue"]
+      @step_batch.on(:success, "#{self.class}##{@next_step.identifier}", @args) if @next_step.present?
 
-      step_batch.jobs do
+      jobs_enqueued = @step_batch.jobs do
         yield
       end
+
+      raise NoJobsEnqueued unless jobs_enqueued.present?
     end
   end
 

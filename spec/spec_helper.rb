@@ -2,7 +2,10 @@
 
 require "sidekiq_workflows"
 require "sidekiq"
+require 'pry'
+
 require_relative "support/sidekiq_harness"
+require_relative "support/workflow_harness"
 require_relative "support/jobs"
 
 RSpec.configure do |config|

@@ -19,22 +19,30 @@ class SidekiqHarness
 
     harness_code = Tempfile.new(["job", ".rb"], "./tmp/")
     harness_code.write <<-RUBY
-      require './spec/support/harness_code.rb'
+      require './lib/sidekiq_workflows'
+      require './spec/support/sidekiq_config.rb'
       require './spec/support/jobs.rb'
       require './spec/support/workflow_harness.rb'
 
       #{code}
     RUBY
     harness_code.close
+    FileUtils.cp(harness_code.path, "copy.rb")
 
     performed_jobs = []
-    Open3.popen3("bundle exec sidekiq -r #{harness_code.path} -q critical -q high -q default -q low") do |stdin, stdout, stderr, wait_thr|
+    status = Open3.popen3("bundle exec sidekiq -v -c10 -r #{harness_code.path} -q critical -q high -q default -q low") do |stdin, stdout, stderr, wait_thr|
       pid = wait_thr.pid
       File.open(PID_FILE, "w"){|f| f.write(pid)}
 
       Timeout.timeout(timeout) do
         stdout.each_line do |line|
+          # puts line
           parsed_line = JSON.parse(line)
+          if parsed_line["lvl"] == "WARN"
+            warn parsed_line["msg"];
+            next
+          end
+
           if parsed_line["msg"] == "done"
             klass = parsed_line["ctx"]["class"]
             args = parsed_line["ctx"]["args"]
@@ -44,11 +52,15 @@ class SidekiqHarness
             ) unless klass == 'Sidekiq::Batch::Callback'
           end
         end
-        stderr.each_line { |line| warn line }
+        stderr.each_line { |line| puts line }
+
+        if wait_thr.value != 0
+          raise "Unable to start sidekiq: exit status=#{wait_thr.value}"
+        end
       end
     rescue Timeout::Error
       Process.kill("TERM", pid)
-      raise "Sidekiq didn't get killed properly"
+      raise "No `shutdown` job encounted; timed out after #{timeout}s"
     end
     performed_jobs
   ensure
