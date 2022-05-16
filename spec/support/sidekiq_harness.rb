@@ -43,7 +43,7 @@ class SidekiqHarness
             next
           end
 
-          if parsed_line["msg"] == "done"
+          if parsed_line["msg"] == "start"
             klass = parsed_line["ctx"]["class"]
             args = parsed_line["ctx"]["args"]
             performed_jobs << PerformedJob.new(

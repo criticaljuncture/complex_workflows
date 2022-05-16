@@ -53,7 +53,7 @@ RSpec.describe ComplexWorkflows do
           end
 
           workflow_jobs do
-            Job.perform_async "sleep", 1, "step_2_workflow"
+            Job.perform_in 2, "step_2_workflow"
           end
         end
 
@@ -75,7 +75,7 @@ RSpec.describe ComplexWorkflows do
       %w(step_1),
       %w(step_2),
       %w(step_3),
-      ["sleep", 1, "step_2_workflow"],
+      %w(step_2_workflow),
       %w(shutdown),
     ]
   end

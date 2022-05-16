@@ -1,13 +1,33 @@
 version: 2.1
+
+orbs:
+  ruby: circleci/ruby@1.0
+  slack: circleci/slack@4.4.2
+
 jobs:
   build:
     docker:
-      - image: ruby:3.1.2
+      - image: cimg/ruby:2.7
+      - image: cimg/redis:6.2.6
     steps:
       - checkout
       - run:
-          name: Run the default task
-          command: |
-            gem install bundler -v 2.3.11
-            bundle install
-            bundle exec rake
+          name: Bundle install, without requiring a Gemfile.lock
+          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
+      - ruby/rspec-test
+      - slack/notify:
+          channel: ofr
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          channel: ofr
+          event: pass
+          template: basic_success_1
+
+workflows:
+  build_and_notify:
+    jobs:
+      - build:
+          context:
+            - slack-secrets
+            - sidekiq-pro
