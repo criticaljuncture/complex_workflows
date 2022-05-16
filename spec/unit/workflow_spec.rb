@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe SidekiqWorkflows do
+RSpec.describe ComplexWorkflows do
   before(:each) { Redis.new.flushdb }
 
   describe '::Starter.perform' do
@@ -231,7 +231,7 @@ RSpec.describe SidekiqWorkflows do
         workflow_batch = Sidekiq::Batch.new
         allow(workflow_instance).to receive(:batch).and_return(workflow_batch)
 
-        expect{ workflow_instance.perform }.to raise_error SidekiqWorkflows::NoJobsEnqueued
+        expect{ workflow_instance.perform }.to raise_error ComplexWorkflows::NoJobsEnqueued
       end
     end
 

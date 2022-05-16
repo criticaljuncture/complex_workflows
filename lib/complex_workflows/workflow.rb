@@ -1,4 +1,4 @@
-class SidekiqWorkflows::Workflow
+class ComplexWorkflows::Workflow
   attr_reader :steps
   def initialize(&blk)
     @steps = []
@@ -18,7 +18,7 @@ class SidekiqWorkflows::Workflow
   end
 
   def step(identifier, &blk)
-    @steps << SidekiqWorkflows::Step.new(identifier: identifier, block: blk)
+    @steps << ComplexWorkflows::Step.new(identifier: identifier, block: blk)
   end
 
   %i(success complete death).each do |callback_type|

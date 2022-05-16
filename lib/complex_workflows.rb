@@ -5,11 +5,11 @@ require "active_support/core_ext/object/blank"
 
 require "sidekiq-pro"
 
-require_relative "sidekiq_workflows/version"
-require_relative "sidekiq_workflows/step"
-require_relative "sidekiq_workflows/workflow"
+require_relative "complex_workflows/version"
+require_relative "complex_workflows/step"
+require_relative "complex_workflows/workflow"
 
-module SidekiqWorkflows
+module ComplexWorkflows
   class Error < StandardError; end
   class NoJobsEnqueued < Error; end
 
@@ -21,7 +21,7 @@ module SidekiqWorkflows
 
   class_methods do
     def workflow(&blk)
-      SidekiqWorkflows::Workflow.new(&blk).register(self)
+      ComplexWorkflows::Workflow.new(&blk).register(self)
     end
   end
 

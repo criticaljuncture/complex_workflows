@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sidekiq_workflows (0.1.0)
+    complex_workflows (0.1.0)
       activesupport
       sidekiq-pro
 
@@ -62,7 +62,7 @@ DEPENDENCIES
   rspec (~> 3.0)
   sidekiq
   sidekiq-pro!
-  sidekiq_workflows!
+  complex_workflows!
 
 BUNDLED WITH
    2.3.11

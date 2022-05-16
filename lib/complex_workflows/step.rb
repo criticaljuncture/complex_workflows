@@ -1,4 +1,4 @@
-class SidekiqWorkflows::Step
+class ComplexWorkflows::Step
   attr_reader :identifier, :block
   def initialize(identifier:, block:)
     @identifier = identifier

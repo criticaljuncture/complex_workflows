@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in sidekiq_workflows.gemspec
+# Specify your gem's dependencies in complex_workflows.gemspec
 gemspec
 
 gem "rake", "~> 13.0"

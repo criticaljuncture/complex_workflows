@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require_relative "lib/sidekiq_workflows/version"
+require_relative "lib/complex_workflows/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "sidekiq_workflows"
-  spec.version = SidekiqWorkflows::VERSION
+  spec.name = "complex_workflows"
+  spec.version = ComplexWorkflows::VERSION
   spec.authors = ["Andrew Carpenter"]
   spec.email = ["andrew@criticaljuncture.org"]
 
   spec.summary = "DSL for managing sidekiq batches"
-  spec.homepage = "https://github.com/criticaljuncture/sidekiq_workflows"
+  spec.homepage = "https://github.com/criticaljuncture/complex_workflows"
   spec.required_ruby_version = ">= 2.6.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/criticaljuncture/sidekiq_workflows"
+  spec.metadata["source_code_uri"] = "https://github.com/criticaljuncture/complex_workflows"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

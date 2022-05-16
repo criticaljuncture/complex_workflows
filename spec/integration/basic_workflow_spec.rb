@@ -1,4 +1,4 @@
-RSpec.describe SidekiqWorkflows do
+RSpec.describe ComplexWorkflows do
   it "our sidekiq harness works" do
     performed_jobs = SidekiqHarness.new.perform(<<-RUBY)
       Job.perform_async("1")
@@ -83,7 +83,7 @@ RSpec.describe SidekiqWorkflows do
   it "can chain batches" do
     performed_jobs = SidekiqHarness.new.perform(<<-RUBY)
       class ChainableWorkflow
-        include SidekiqWorkflows
+        include ComplexWorkflows
         workflow do
           step(:step_1) do |id|
             step_jobs do
@@ -102,7 +102,7 @@ RSpec.describe SidekiqWorkflows do
       end
 
       class ParentWorkflow
-        include SidekiqWorkflows
+        include ComplexWorkflows
         workflow do
           step(:run_all) do |id|
             step_jobs do

@@ -19,7 +19,7 @@ class SidekiqHarness
 
     harness_code = Tempfile.new(["job", ".rb"], "./tmp/")
     harness_code.write <<-RUBY
-      require './lib/sidekiq_workflows'
+      require './lib/complex_workflows'
       require './spec/support/sidekiq_config.rb'
       require './spec/support/jobs.rb'
       require './spec/support/workflow_harness.rb'

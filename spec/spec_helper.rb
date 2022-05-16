@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "sidekiq_workflows"
+require "complex_workflows"
 require "sidekiq"
 require 'pry'
 
