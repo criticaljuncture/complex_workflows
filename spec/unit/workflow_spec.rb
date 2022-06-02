@@ -31,7 +31,7 @@ RSpec.describe ComplexWorkflows do
       workflow_class = create_workflow(sidekiq_options: sidekiq_options) do
         step(:foo) {}
       end
-    
+
       expect(workflow_class.sidekiq_options_hash).to eql(sidekiq_options)
     end
   end
@@ -105,7 +105,7 @@ RSpec.describe ComplexWorkflows do
       workflow_batch = workflow_class.start(1,2)
       expect(workflow_batch.callbacks["death"]).to eql(
         [{"#{workflow_class}#death"=>[1, 2]}]
-      ) 
+      )
     end
 
     it "handles mutation of arguments per preprocess_args callback" do
@@ -127,7 +127,34 @@ RSpec.describe ComplexWorkflows do
 
       expect(workflow_batch.callbacks["success"]).to eql(
         [{"#{workflow_class}#success"=>[10, 20]}]
-      ) 
+      )
+    end
+
+    it "preprocess_args callback has access to instance methods" do
+      workflow_class = create_workflow do
+        step(:foo) {|a, options| }
+
+        preprocess_args do |a, options|
+          [double(a), options]
+        end
+
+        success do |a, options|
+        end
+
+      end
+
+      workflow_class.define_method(:double) do |x|
+        x*2
+      end
+
+      workflow_batch = workflow_class.start(1, {})
+
+      job = Sidekiq::Queue.new("default").first
+      expect(job["args"]).to eql [2, {}]
+
+      expect(workflow_batch.callbacks["success"]).to eql(
+        [{"#{workflow_class}#success"=>[2,{}]}]
+      )
     end
   end
 
@@ -192,7 +219,7 @@ RSpec.describe ComplexWorkflows do
         step_batch = Sidekiq::BatchSet.new.first
         expect(step_batch.callbacks["success"]).to eql(
           [{"#{workflow_class}#bar"=>[1, 2]}]
-        ) 
+        )
       end
 
       it "creates a batch for the step that calls the next step on success" do
@@ -255,7 +282,7 @@ RSpec.describe ComplexWorkflows do
         expect(job["bid"]).to eql workflow_batch.bid
         expect(job["args"]).to eql [1,2]
       end
-    end      
+    end
 
     describe "#parent_jobs"
   end

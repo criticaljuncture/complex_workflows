@@ -57,25 +57,25 @@ class ComplexWorkflows::Workflow
     description_callback = @description_callback
     callbacks = @callbacks
 
-    base_class.define_singleton_method :start do |*args|
+    base_class.define_method :start do |*args|
       workflow_batch = Sidekiq::Batch.new
       workflow_batch.callback_queue = base_class.sidekiq_options["queue"]
 
-      if preprocess_args_callback
-        args = instance_exec(*args, &preprocess_args_callback)
-      end
       @args = args
+      if preprocess_args_callback
+        @args = instance_exec(*args, &preprocess_args_callback)
+      end
 
       if description_callback
-        workflow_batch.description = instance_exec(*args, &description_callback)
+        workflow_batch.description = instance_exec(*@args, &description_callback)
       end
 
       callbacks.keys.each do |callback_type|
-        workflow_batch.on(callback_type, "#{base_class.name}##{callback_type}", args)
+        workflow_batch.on(callback_type, "#{base_class.name}##{callback_type}", @args)
       end
 
       workflow_batch.jobs do
-        base_class.perform_async(*args)
+        base_class.perform_async(*@args)
       end
 
       workflow_batch

@@ -23,6 +23,10 @@ module ComplexWorkflows
     def workflow(&blk)
       ComplexWorkflows::Workflow.new(&blk).register(self)
     end
+
+    def start(*args)
+      new.start(*args)
+    end
   end
 
   def step_jobs
