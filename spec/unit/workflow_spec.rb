@@ -67,6 +67,17 @@ RSpec.describe ComplexWorkflows do
       expect(job["args"]).to eql [1,2]
     end
 
+    it "makes args available in the description" do
+      workflow_class = create_workflow do
+        description do |a,b|
+          @args.first
+        end
+        step(:foo) {|*args| }
+      end
+
+      expect(workflow_class.start("fancy description", {}).description).to eq("fancy description")
+    end
+
     it "populates the callback queue on the workflow batch from the sidekiq_options setting" do
       queue_name = :urgent
       workflow_class = create_workflow(sidekiq_options: {queue: queue_name}) do
@@ -178,6 +189,18 @@ RSpec.describe ComplexWorkflows do
 
       expect{ workflow_class.new.perform(1,2) }.to raise_error(RuntimeError).with_message([1,2].inspect)
     end
+
+    it "makes args available in the description" do
+      workflow_class = create_workflow do
+        step(:foo) {|*args| }
+        description do |a,b|
+          raise @args.first
+        end
+      end
+
+      expect{ workflow_class.new.perform("fancy description",2) }.to raise_error(RuntimeError).with_message("fancy description")
+    end
+
 
     describe "#step_jobs" do
       it "creates a batch for the step inside the workflow" do

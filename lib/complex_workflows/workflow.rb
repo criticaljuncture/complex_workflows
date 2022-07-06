@@ -92,12 +92,13 @@ class ComplexWorkflows::Workflow
       @workflow_batch = batch
       @parent_batch = Sidekiq::Batch.new(@workflow_batch.parent_bid) if @workflow_batch&.parent_bid
 
+      @args = args
+
       if description_callback
         @description = "#{instance_exec(*args, &description_callback)}: #{step.identifier}"
       end
 
       @next_step = steps.first if steps.present?
-      @args = args
 
       instance_exec(*args, &step.block)
 
