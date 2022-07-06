@@ -167,6 +167,27 @@ RSpec.describe ComplexWorkflows do
         [{"#{workflow_class}#success"=>[2,{}]}]
       )
     end
+
+    it "makes args available in the callback's description" do
+      workflow_class = create_workflow do
+        description do |a,b|
+          @args.first
+        end
+        step(:foo) {|*args| }
+
+        success do |a,b|
+          raise @args.first
+        end
+      end
+
+      workflow_batch = Sidekiq::Batch.new
+      # need to put a job in the batch to get it to save to sidekiq
+      workflow_batch = workflow_class.start(1, {})
+
+      expect {
+        workflow_class.new.success(workflow_batch.status, ["fancy description", {}])
+      }.to raise_error("fancy description")
+    end
   end
 
   describe '#perform' do
@@ -201,6 +222,29 @@ RSpec.describe ComplexWorkflows do
       expect{ workflow_class.new.perform("fancy description",2) }.to raise_error(RuntimeError).with_message("fancy description")
     end
 
+    it "makes args available in the callback's description" do
+      workflow_class = create_workflow do
+        description do |a,b|
+          @args.first
+        end
+        step(:foo) {|*args| }
+
+        success do |a,b|
+          raise @args.first
+        end
+      end
+
+      workflow_batch = Sidekiq::Batch.new
+      # need to put a job in the batch to get it to save to sidekiq
+      workflow_batch.jobs do
+        Job.perform_async
+      end
+      status = double(:status, parent_bid: workflow_batch.bid)
+
+      expect {
+        workflow_class.new.success(status, ["fancy description", {}])
+      }.to raise_error("fancy description")
+    end
 
     describe "#step_jobs" do
       it "creates a batch for the step inside the workflow" do
@@ -265,6 +309,26 @@ RSpec.describe ComplexWorkflows do
 
         expect(step_batch.callback_queue).to eql(queue_name)
       end
+
+    it "makes args available for the step's callback's description" do
+      workflow_class = create_workflow do
+        description do |a,b|
+          @args.first
+        end
+
+        step(:foo) do |a,b|
+          step_jobs do
+            Job.perform_async
+          end
+        end
+      end
+
+      workflow_instance = workflow_class.new
+      workflow_batch = Sidekiq::Batch.new
+      allow(workflow_instance).to receive(:batch).and_return(workflow_batch)
+
+      expect(workflow_instance.perform("fancy", {}).description).to match("fancy: foo")
+    end
 
       it "errors if no jobs are enqueued" do
         workflow_class = create_workflow do
