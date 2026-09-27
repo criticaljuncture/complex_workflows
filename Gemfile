@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-source "https://rubygems.org"
+source "https://rubygems.org", cooldown: 7
 
 # Specify your gem's dependencies in complex_workflows.gemspec
 gemspec
@@ -17,6 +17,6 @@ gem "sidekiq", ">= 8"
 
 gem 'pry'
 
-source "https://gems.contribsys.com/" do
-  gem 'sidekiq-pro'
+source "https://gems.contribsys.com/", cooldown: 7 do
+  gem "sidekiq-pro"
 end
