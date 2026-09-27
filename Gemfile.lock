@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    complex_workflows (0.1.0)
+    complex_workflows (0.2.0)
       activesupport
       sidekiq-pro (>= 8.1)
 

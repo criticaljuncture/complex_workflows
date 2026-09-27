@@ -3,8 +3,6 @@ require "timeout"
 require "tempfile"
 
 class SidekiqHarness
-  PID_FILE = "tmp/sidekiq.pid"
-
   class PerformedJob
     attr_reader :job_class, :args, :bid
     def initialize(job_class:, args:, bid: nil)
@@ -14,58 +12,74 @@ class SidekiqHarness
     end
   end
 
-  def perform(code, timeout: 5)
-    Redis.new.flushdb
+  def perform(code, timeout: 30)
+    raise ArgumentError, "timeout must be positive" unless timeout.positive?
 
-    harness_code = Tempfile.new(["job", ".rb"], "./tmp/")
-    harness_code.write <<-RUBY
-      require './lib/complex_workflows'
-      require './spec/support/sidekiq_config.rb'
-      require './spec/support/jobs.rb'
-      require './spec/support/workflow_harness.rb'
+    Sidekiq.redis(&:flushdb)
 
-      #{code}
-    RUBY
-    harness_code.close
-    FileUtils.cp(harness_code.path, "copy.rb")
+    Tempfile.create(["complex_workflows_harness", ".rb"]) do |file|
+      file.write(harness_source(code))
+      file.flush
+      run_sidekiq(file.path, timeout)
+    end
+  end
 
+  private
+
+  def run_sidekiq(path, timeout)
     performed_jobs = []
-    Open3.popen3("bundle exec sidekiq -v -c10 -r #{harness_code.path} -q critical -q high -q default -q low") do |stdin, stdout, stderr, wait_thr|
-      pid = wait_thr.pid
-      File.write(PID_FILE, pid)
-
-      Timeout.timeout(timeout) do
-        stdout.each_line do |line|
-          # puts line
-          parsed_line = JSON.parse(line)
-          if parsed_line["lvl"] == "WARN"
-            warn parsed_line["msg"]
-            next
+    failed_jobs = []
+    output = +""
+    Open3.popen2e("bundle", "exec", "sidekiq", "-v", "-c10", "-t1", "-r", path,
+      "-q", "critical", "-q", "high", "-q", "default", "-q", "low") do |stdin, stdout, wait_thr|
+      stdin.close
+      begin
+        Timeout.timeout(timeout) do
+          stdout.each_line do |line|
+            output << line
+            record_job(line, performed_jobs, failed_jobs)
           end
-
-          if parsed_line["msg"] == "start"
-            klass = parsed_line["ctx"]["class"]
-            args = parsed_line["ctx"]["args"]
-            unless klass == "Sidekiq::Batch::Callback"
-              performed_jobs << PerformedJob.new(
-                job_class: klass,
-                args: args
-              )
-            end
+          unless wait_thr.value.success?
+            raise "Unable to run sidekiq: exit status=#{wait_thr.value.exitstatus}\n#{output}"
           end
+          raise "Sidekiq jobs failed:\n#{output}" unless failed_jobs.empty?
         end
-        stderr.each_line { |line| }
-
-        if wait_thr.value != 0
-          raise "Unable to start sidekiq: exit status=#{wait_thr.value}"
+      rescue Timeout::Error
+        raise "No `shutdown` job encountered; timed out after #{timeout}s\n#{output}"
+      ensure
+        if wait_thr.alive?
+          Process.kill("TERM", wait_thr.pid)
+          Process.kill("KILL", wait_thr.pid) unless wait_thr.join(5)
         end
       end
-    rescue Timeout::Error
-      Process.kill("TERM", pid)
-      raise "No `shutdown` job encounted; timed out after #{timeout}s"
     end
     performed_jobs
-  ensure
-    File.unlink(PID_FILE) if File.exist?(PID_FILE)
+  end
+
+  def record_job(line, performed_jobs, failed_jobs)
+    parsed_line = JSON.parse(line)
+    failed_jobs << parsed_line if parsed_line["msg"] == "fail"
+    return unless parsed_line["msg"] == "start"
+
+    context = parsed_line.fetch("ctx")
+    return if context["class"] == "Sidekiq::Batch::Callback"
+
+    performed_jobs << PerformedJob.new(job_class: context["class"], args: context["args"])
+  rescue JSON::ParserError
+    # Startup failures can print plain text; retain it in the failure output.
+    nil
+  end
+
+  private
+
+  def harness_source(code)
+    <<~RUBY
+      require "./lib/complex_workflows"
+      require "./spec/support/sidekiq_config"
+      require "./spec/support/jobs"
+      require "./spec/support/workflow_harness"
+
+      #{code.strip}
+    RUBY
   end
 end

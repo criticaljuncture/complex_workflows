@@ -2,6 +2,8 @@
 
 require "complex_workflows"
 require "sidekiq"
+require "sidekiq/api"
+require "sidekiq/pro/api"
 require "pry"
 
 require_relative "support/sidekiq_harness"

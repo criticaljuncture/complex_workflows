@@ -39,7 +39,7 @@ RSpec.describe ComplexWorkflows do
   end
 
   it "performs the steps in order, but workflow jobs can go anywhere later" do
-    performed_jobs = SidekiqHarness.new.perform(<<-RUBY, timeout: 0)
+    performed_jobs = SidekiqHarness.new.perform(<<~RUBY)
       workflow = create_workflow do
         step(:step_1) do
           step_jobs do
@@ -78,6 +78,37 @@ RSpec.describe ComplexWorkflows do
       %w[step_2_workflow],
       %w[shutdown]
     ]
+  end
+
+  it "waits for nested workflows before advancing to the next step" do
+    performed_jobs = SidekiqHarness.new.perform(<<~RUBY)
+      class NestedWorkflow
+        include ComplexWorkflows
+
+        workflow do
+          step(:work) do |id|
+            step_jobs { Job.perform_in(1, "nested", id) }
+          end
+        end
+      end
+
+      workflow = create_workflow do
+        step(:nested) do |id|
+          step_jobs { NestedWorkflow.start(id) }
+        end
+
+        step(:after_nested) do |id|
+          step_jobs { Job.perform_async("after_nested", id) }
+        end
+
+        success { Job.perform_async("shutdown") }
+      end
+
+      workflow.start(42)
+    RUBY
+
+    expect(performed_jobs.select { |job| job.job_class == "Job" }.map(&:args))
+      .to eq([["nested", 42], ["after_nested", 42], ["shutdown"]])
   end
 
   it "can chain batches" do
