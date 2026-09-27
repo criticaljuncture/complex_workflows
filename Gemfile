@@ -15,7 +15,8 @@ gem "rubocop-rspec"
 gem "standard", ">= 1.49.0"
 gem "sidekiq", ">= 8"
 
-gem 'pry'
+gem "pry"
+gem "rack-session", ">= 2.1"
 
 source "https://gems.contribsys.com/", cooldown: 7 do
   gem "sidekiq-pro"

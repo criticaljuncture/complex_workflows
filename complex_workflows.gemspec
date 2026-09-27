@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "DSL for managing sidekiq batches"
   spec.homepage = "https://github.com/criticaljuncture/complex_workflows"
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.required_ruby_version = ">= 4.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/criticaljuncture/complex_workflows"
@@ -28,8 +28,8 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "activesupport"
-  spec.add_dependency "sidekiq-pro"
-  
+  spec.add_dependency "sidekiq-pro", ">= 8.1"
+
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
 end
