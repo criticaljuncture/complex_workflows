@@ -1,0 +1,31 @@
+inherit_mode:
+  merge:
+    - Exclude
+
+plugins:
+  - rubocop-performance
+  - rubocop-rspec
+
+require:
+  - standard
+
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  Exclude:
+    - bin/*
+    - tmp/**/*
+    - vendor/**/*
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  SuggestExtensions: false
+
+RSpec/EmptyExampleGroup:
+  Enabled: false
+RSpec/InstanceVariable:
+  AssignmentOnly: true
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
