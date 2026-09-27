@@ -11,3 +11,4 @@
 .rspec_status
 
 .session_key
+.session.key

@@ -16,7 +16,7 @@ class SidekiqWorkflowHarness
   end
 
   def perform(timeout: 5)
-    Redis.new.flushdb
+    Sidekiq.redis(&:flushdb)
 
     yield
 

@@ -3,7 +3,7 @@ class Job
 
   def perform(*args)
     if args == ["shutdown"]
-      Process.kill("TERM", File.read("tmp/sidekiq.pid").to_i)
+      Process.kill("TERM", Process.pid)
     end
   end
 end

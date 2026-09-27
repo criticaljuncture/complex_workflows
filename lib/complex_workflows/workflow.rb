@@ -39,7 +39,7 @@ class ComplexWorkflows::Workflow
 
   def define_starter_job_class(base_class)
     klass = Class.new do
-      include Sidekiq::Worker
+      include Sidekiq::Job
 
       sidekiq_options base_class.sidekiq_options if base_class.sidekiq_options
     end
@@ -72,7 +72,7 @@ class ComplexWorkflows::Workflow
       end
 
       callbacks.keys.each do |callback_type|
-        workflow_batch.on(callback_type, "#{base_class.name}##{callback_type}", @args)
+        workflow_batch.on(callback_type, "#{base_class.name}##{callback_type}", batch_callback_options(@args))
       end
 
       workflow_batch.jobs do
@@ -115,10 +115,13 @@ class ComplexWorkflows::Workflow
     description_callback = @description_callback
 
     (steps + [nil]).each_cons(2) do |step, next_step|
-      base_class.define_method step.identifier do |status, args|
+      base_class.define_method step.identifier do |status, options|
+        return if status.invalidated? # step enqueued no work => NoJobsEnqueued
+
         @workflow_batch = Sidekiq::Batch.new(status.parent_bid)
 
         @parent_batch = Sidekiq::Batch.new(@workflow_batch.parent_bid) if @workflow_batch.parent_bid
+        args = callback_args(options)
         @args = args
 
         if description_callback
@@ -140,8 +143,9 @@ class ComplexWorkflows::Workflow
 
   def define_callbacks(base_class)
     @callbacks.each do |callback, callback_blk|
-      base_class.define_method callback do |status, args|
+      base_class.define_method callback do |status, options|
         @parent_batch = Sidekiq::Batch.new(status.parent_bid) if status.parent_bid
+        args = callback_args(options)
         @args = args
         instance_exec(*args, &callback_blk)
       ensure

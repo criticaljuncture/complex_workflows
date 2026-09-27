@@ -7,13 +7,17 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/ruby:2.7
-      - image: cimg/redis:6.2.6
+      - image: cimg/ruby:4.0
+      - image: cimg/redis:7.4
     steps:
       - checkout
       - run:
-          name: Bundle install, without requiring a Gemfile.lock
-          command: bundle install --jobs=4 --retry=3 --path vendor/bundle
+          name: Install dependencies
+          command: |
+            gem install bundler -v "$(tail -n 1 Gemfile.lock | tr -d ' ')"
+            bundle config set path vendor/bundle
+            bundle install --jobs=4 --retry=3
+      - run: bundle exec rubocop
       - ruby/rspec-test
       - slack/notify:
           channel: ofr

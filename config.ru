@@ -1,9 +1,12 @@
 # config.ru
+Encoding.default_external = Encoding::UTF_8
+
 require "sidekiq-pro"
 require "sidekiq/pro/web"
+require "rack/session/cookie"
 
 Sidekiq.configure_client do |config|
-  config.redis = {url: "redis://#{ENV["REDIS_HOST"]}:#{ENV["REDIS_PORT"]}"}
+  config.redis = {url: ENV.fetch("REDIS_URL") { "redis://#{ENV.fetch("REDIS_HOST", "localhost")}:#{ENV.fetch("REDIS_PORT", "6379")}" }}
 end
 
 unless File.exist?(".session.key")
