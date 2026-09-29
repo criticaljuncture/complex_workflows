@@ -3,7 +3,7 @@ class ComplexWorkflows::Workflow
   def initialize(&blk)
     @steps = []
     @callbacks = {}
-    @description_callback ||= Proc.new do |args|
+    @description_callback ||= proc do |args|
       "#{self.class} (#{args})"
     end
     instance_eval(&blk)
@@ -21,7 +21,7 @@ class ComplexWorkflows::Workflow
     @steps << ComplexWorkflows::Step.new(identifier: identifier, block: blk)
   end
 
-  %i(success complete death).each do |callback_type|
+  %i[success complete death].each do |callback_type|
     define_method callback_type do |&blk|
       @callbacks[callback_type] = blk
     end
@@ -40,6 +40,7 @@ class ComplexWorkflows::Workflow
   def define_starter_job_class(base_class)
     klass = Class.new do
       include Sidekiq::Worker
+
       sidekiq_options base_class.sidekiq_options if base_class.sidekiq_options
     end
 
@@ -102,7 +103,7 @@ class ComplexWorkflows::Workflow
 
       instance_exec(*args, &step.block)
 
-      return @step_batch
+      @step_batch
     ensure
       @parent_batch = nil
       @workflow_batch = nil
@@ -128,7 +129,7 @@ class ComplexWorkflows::Workflow
 
         instance_exec(*args, &step.block)
 
-        return @step_batch
+        @step_batch
       ensure
         @parent_batch = nil
         @workflow_batch = nil

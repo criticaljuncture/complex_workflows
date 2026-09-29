@@ -3,6 +3,7 @@ def create_workflow(sidekiq_options: nil, &blk)
   sidekiq_opts = sidekiq_options
   klass = Class.new do
     include ComplexWorkflows
+
     sidekiq_options sidekiq_opts if sidekiq_opts
 
     workflow(&block)
