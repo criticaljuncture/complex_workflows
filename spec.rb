@@ -1,7 +1,7 @@
-require 'open3'
-require 'timeout'
-require 'tempfile'
-require 'sidekiq'
+require "open3"
+require "timeout"
+require "tempfile"
+require "sidekiq"
 
 class SidekiqWorkflowHarness
   PID_FILE = "tmp/sidekiq.pid"
@@ -23,7 +23,7 @@ class SidekiqWorkflowHarness
     performed_jobs = []
     Open3.popen3("bundle exec sidekiq -r ./spec/fixtures/harness_code.rb") do |stdin, stdout, stderr, wait_thr|
       pid = wait_thr.pid
-      File.open(PID_FILE, "w"){|f| f.write(pid)}
+      File.write(PID_FILE, pid)
 
       Timeout.timeout(timeout) do
         stdout.each_line do |line|
@@ -31,7 +31,7 @@ class SidekiqWorkflowHarness
           if parsed_line["msg"] == "done"
             performed_jobs << PerformedJob.new(
               job_class: parsed_line["ctx"]["class"],
-              args: parsed_line["ctx"]["args"],
+              args: parsed_line["ctx"]["args"]
             )
           end
         end
@@ -43,11 +43,11 @@ class SidekiqWorkflowHarness
     end
     performed_jobs
   ensure
-    File.unlink(PID_FILE) if File.exists?(PID_FILE)
+    File.unlink(PID_FILE) if File.exist?(PID_FILE)
   end
 end
 
-require_relative 'spec/fixtures/jobs'
+require_relative "spec/fixtures/jobs"
 
 performed_jobs = SidekiqWorkflowHarness.new.perform do
   A.perform_async(1)

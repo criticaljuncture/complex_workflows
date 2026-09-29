@@ -1,6 +1,6 @@
-require 'open3'
-require 'timeout'
-require 'tempfile'
+require "open3"
+require "timeout"
+require "tempfile"
 
 class SidekiqHarness
   PID_FILE = "tmp/sidekiq.pid"
@@ -30,29 +30,31 @@ class SidekiqHarness
     FileUtils.cp(harness_code.path, "copy.rb")
 
     performed_jobs = []
-    status = Open3.popen3("bundle exec sidekiq -v -c10 -r #{harness_code.path} -q critical -q high -q default -q low") do |stdin, stdout, stderr, wait_thr|
+    Open3.popen3("bundle exec sidekiq -v -c10 -r #{harness_code.path} -q critical -q high -q default -q low") do |stdin, stdout, stderr, wait_thr|
       pid = wait_thr.pid
-      File.open(PID_FILE, "w"){|f| f.write(pid)}
+      File.write(PID_FILE, pid)
 
       Timeout.timeout(timeout) do
         stdout.each_line do |line|
           # puts line
           parsed_line = JSON.parse(line)
           if parsed_line["lvl"] == "WARN"
-            warn parsed_line["msg"];
+            warn parsed_line["msg"]
             next
           end
 
           if parsed_line["msg"] == "start"
             klass = parsed_line["ctx"]["class"]
             args = parsed_line["ctx"]["args"]
-            performed_jobs << PerformedJob.new(
-              job_class: klass,
-              args: args,
-            ) unless klass == 'Sidekiq::Batch::Callback'
+            unless klass == "Sidekiq::Batch::Callback"
+              performed_jobs << PerformedJob.new(
+                job_class: klass,
+                args: args
+              )
+            end
           end
         end
-        stderr.each_line { |line| puts line }
+        stderr.each_line { |line| }
 
         if wait_thr.value != 0
           raise "Unable to start sidekiq: exit status=#{wait_thr.value}"
@@ -64,6 +66,6 @@ class SidekiqHarness
     end
     performed_jobs
   ensure
-    File.unlink(PID_FILE) if File.exists?(PID_FILE)
+    File.unlink(PID_FILE) if File.exist?(PID_FILE)
   end
 end

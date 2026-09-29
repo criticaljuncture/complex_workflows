@@ -5,7 +5,7 @@ RSpec.describe ComplexWorkflows do
       Job.perform_async("2")
       Job.perform_async("shutdown")
     RUBY
-    expect(performed_jobs.map(&:args)).to contain_exactly(%w(1), %w(2), %w(shutdown))
+    expect(performed_jobs.map(&:args)).to contain_exactly(%w[1], %w[2], %w[shutdown])
   end
 
   it "performs the steps in order, passings args" do
@@ -31,9 +31,9 @@ RSpec.describe ComplexWorkflows do
     RUBY
 
     expect(performed_jobs.map(&:args)).to eql [
-      %w(a b),
-      [1, %w(a b)],
-      [2, %w(a b)],
+      %w[a b],
+      [1, %w[a b]],
+      [2, %w[a b]],
       ["shutdown"]
     ]
   end
@@ -71,12 +71,12 @@ RSpec.describe ComplexWorkflows do
     RUBY
 
     expect(performed_jobs.map(&:args)).to eql [
-      %w(), # whole workflow
-      %w(step_1),
-      %w(step_2),
-      %w(step_3),
-      %w(step_2_workflow),
-      %w(shutdown),
+      %w[], # whole workflow
+      %w[step_1],
+      %w[step_2],
+      %w[step_3],
+      %w[step_2_workflow],
+      %w[shutdown]
     ]
   end
 
@@ -119,7 +119,7 @@ RSpec.describe ComplexWorkflows do
       ParentWorkflow.start
     RUBY
 
-    expect(performed_jobs.map{|j| [j.job_class, j.args]}).to eql [
+    expect(performed_jobs.map { |j| [j.job_class, j.args] }).to eql [
       ["ParentWorkflow", []],
       ["ChainableWorkflow::Starter", [1]],
       ["ChainableWorkflow", [1]], # perform method, step 1
@@ -130,7 +130,7 @@ RSpec.describe ComplexWorkflows do
       ["ChainableWorkflow::Starter", [3]],
       ["ChainableWorkflow", [3]], # perform method, step 1
       ["Job", ["step_1", 3]],     # actions of step 1
-      ["Job", ["shutdown"]],      # final success
+      ["Job", ["shutdown"]]      # final success
     ]
   end
 end

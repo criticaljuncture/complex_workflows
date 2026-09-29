@@ -2,7 +2,7 @@
 
 require "complex_workflows"
 require "sidekiq"
-require 'pry'
+require "pry"
 
 require_relative "support/sidekiq_harness"
 require_relative "support/workflow_harness"
